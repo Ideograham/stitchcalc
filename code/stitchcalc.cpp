@@ -44,6 +44,60 @@ roundFrac(r32 input, u32 fraction)
 internal void
 computePatternsWithCoverage(r32 weldDistance, r32 weldCoverageTarget, u32 precision=8)
 {
+    printf("Computing Centered Stitch Weld Paterns for Total Distance: %0.3f, with coverage of: %0.2f%% rounded to fractional values:%d\n", 
+        weldDistance, weldCoverageTarget*100, precision);
+    r32 stitchDistance = weldDistance - MIN_WELD_LENGTH;
+    if (stitchDistance <= MIN_WELD_LENGTH)
+    {
+        if (weldCoverageTarget <= 0.5f)
+        {
+            printf("Length:%0.2f\n", MIN_WELD_LENGTH); 
+        }
+        else
+        {
+            r32 suggestedWeld = weldCoverageTarget*weldDistance;
+            suggestedWeld = roundFrac(suggestedWeld, precision);
+            if (suggestedWeld < MIN_WELD_LENGTH)
+                suggestedWeld = MIN_WELD_LENGTH;
+            printf("Length:%0.2f\n", suggestedWeld);    
+        }
+    }
+    else
+    {
+        r32 halfDistance = weldDistance * 0.5f; 
+        r32 thirdDistance = weldDistance / 3.0f;
+        r32 stitchL, stitchP = 0.0f;
+        u32 stitchN;
+        for (stitchN = 3;;stitchN+=2)
+        {
+           stitchL = weldCoverageTarget*weldDistance / stitchN;
+           if (stitchL < MIN_WELD_LENGTH) {
+               break;
+           } else if (stitchL > thirdDistance) {
+               continue;
+           } else {
+             stitchL = roundFrac(stitchL, precision);
+             // with welds to end
+             stitchP = (weldDistance - stitchL) / (stitchN - 1);
+             stitchP = roundFrac(stitchP, precision);
+             r32 actualCoverage = stitchN * stitchL / weldDistance;
+             printf("Weld[Edge] (Length - Pitch):%0.4f - %0.4f\t\tStitches:%d\tCoverage:%0.2f%%\n", 
+                   stitchL, stitchP, stitchN, actualCoverage*100);
+             
+             // with even spacing to ends
+             stitchP = (weldDistance ) / (stitchN);
+             stitchP = roundFrac(stitchP, precision);
+             actualCoverage = stitchN * stitchL / weldDistance;
+             printf("Weld[=SPC] (Length - Pitch):%0.4f - %0.4f\t\tStitches:%d\tCoverage:%0.2f%%\n", 
+                   stitchL, stitchP, stitchN, actualCoverage*100);
+           }
+        }
+    }
+}
+
+internal void
+computeEdgePatternsWithCoverage(r32 weldDistance, r32 weldCoverageTarget, u32 precision=8)
+{
     printf("Computing Stitch Weld Paterns for Total Distance: %0.3f, with coverage of: %0.2f%% rounded to fractional values:%d\n", 
         weldDistance, weldCoverageTarget*100, precision);
     
